@@ -2,7 +2,7 @@ import React from 'react';
 
 const Footer = () => (
   <footer className="bg-dark text-white text-center py-3">
-    <p>© 2024 Blockshield Dapp</p>
+    <p>&copy; 2024 Blockshield, Inc</p>
   </footer>
 );
 
