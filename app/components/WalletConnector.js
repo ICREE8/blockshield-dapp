@@ -20,7 +20,8 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
     }
 
     const accounts = await provider.send("eth_requestAccounts", []);
-    setAccount(accounts[0]);
+    const account = `${accounts[0].substring(0, 6)}...${accounts[0].substring(36)}`;
+    setAccount(account);
     onConnect(provider, accounts[0]);
   };
 

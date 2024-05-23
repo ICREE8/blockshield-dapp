@@ -1,9 +1,10 @@
 class Asset {
-    constructor(id, name, type, value) {
+    constructor(id, symbol, quantity, amount, transaction) {
         this.id = id;
-        this.name = name;
-        this.type = type;
-        this.value = value;
+        this.symbol = symbol;
+        this.quantity = quantity;
+        this.amount = amount;
+        this.transaction = transaction;
     }
 }
 

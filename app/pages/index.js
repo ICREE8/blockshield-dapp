@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 import apiService from '../services/ApiService';
-import DataTable from '../components/Table';
+import AssetsTable from '../components/AssetsTable';
+import SecuredAssetsTable from '../components/SecuredAssetsTable';
 import Footer from '../components/Footer';
 import Image from "next/image";
 import WalletConnector from '../components/WalletConnector';
@@ -12,11 +13,13 @@ const HomePage = () => {
     const [provider, setProvider] = useState(null);
     const [wallet, setWallet] = useState(null);
     const [assets, setAssets] = useState([]);
+    const [securedAssets, setSecuredAssets] = useState([]);
 
     const fetchAssets = useCallback(async () => {
         if (wallet) {
             try {
-                const response = await apiService.getAssetsByWallet(wallet);
+                const response = await apiService.getAssets();
+                console.log(response);
                 setAssets(response.data);
             } catch (err) {
                 console.error("Failed to fetch assets", err);
@@ -24,9 +27,22 @@ const HomePage = () => {
         }
     }, [wallet]);
 
+    const fetchSecuredAssets = useCallback(async () => {
+        if (wallet) {
+            try {
+                const response = await apiService.getAssetsByWallet(wallet);
+                console.log(response);
+                setSecuredAssets(response.data);
+            } catch (err) {
+                console.error("Failed to fetch secured assets", err);
+            }
+        }
+    }, [wallet]);
+
     useEffect(() => {
         fetchAssets();
-    }, [fetchAssets]);
+        fetchSecuredAssets();
+    }, [fetchAssets, fetchSecuredAssets]);
 
     const handleWalletConnect = (provider, wallet) => {
         setProvider(provider);
@@ -36,7 +52,7 @@ const HomePage = () => {
     const handleWalletDisconnect = () => {
         setProvider(null);
         setWallet(null);
-        setAssets([]);
+        setSecuredAssets([]);
     };
 
     return (
@@ -62,9 +78,10 @@ const HomePage = () => {
                 </div>
             </div>
             <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-                <div className="container mt-5">
-                    {wallet && <DataTable data={assets} />}
-                </div>
+                {wallet && <AssetsTable data={assets} />}
+            </div>
+            <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
+                {wallet && <SecuredAssetsTable data={securedAssets} />}
             </div>
             <Footer />
         </main>
