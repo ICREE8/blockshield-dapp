@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'
 import blockchainService from '../services/BlockchainService';
 import apiService from '../services/ApiService';
 
 const AssetPurchaseForm = ({ asset }) => {
+    const router = useRouter();
     const [quantity, setQuantity] = useState(0);
     const [insuranceInclude, setInsuranceInclude] = useState(false);
     const [error, setError] = useState('');
@@ -12,28 +14,38 @@ const AssetPurchaseForm = ({ asset }) => {
 
     console.log(asset);
 
+    const goHome = async () => {
+        router.push('/');
+    }
+
     const handleBuy = async (e) => {
         e.preventDefault();
 
         if (quantity <= 0 || quantity > asset.total_supply) {
-            console.log(quantity);
             setError('Invalid quantity');
             return;
         }
 
         try {
-            const tx = await blockchainService.buyAsset(provider, asset.id, quantity);
+            const tx = await blockchainService.insure(
+                asset.insurance_token_address,
+                asset.id,
+                quantity,
+                insuranceInclude
+            );
 
             if (tx) {
+                const walletAccount = await blockchainService.getWalletAccount();
                 const transaction = {
                     "hash": tx.transaction,
-                    "wallet": "0xE5435Db2b26a59083788cA861e7f86CF7338CF64",
+                    "wallet": walletAccount,
                     "assetTransaction": {
                         "id": asset.id,
                         "symbol": asset.symbol,
                         "quantity": quantity
                     }
                 };
+
                 await apiService.createTransaction(transaction);
                 setSuccessMessage(`Success transaction for [ ${asset.symbol} ] on blockchain!`);
             } else {
@@ -43,6 +55,7 @@ const AssetPurchaseForm = ({ asset }) => {
             console.error(err);
             setError('Failed to complete the transaction on blockchain!');
         }
+
     };
 
     return (
@@ -89,7 +102,10 @@ const AssetPurchaseForm = ({ asset }) => {
                     </div>
                     <label htmlFor="insurance" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree to sign the <a href="#" className="text-blue-600 hover:underline dark:text-blue-500">insurance contract.</a></label>
                 </div>
+                <br />
                 <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Insure/Buy Asset</button>
+                <br /><br />
+                <button type="button" onClick={goHome} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Go Home</button>
             </form>
         </div>
     );
