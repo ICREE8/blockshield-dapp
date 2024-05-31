@@ -46,8 +46,9 @@ const AssetPurchaseForm = ({ asset }) => {
                     }
                 };
 
-                await apiService.createTransaction(transaction);
-                setSuccessMessage(`Success transaction for [ ${asset.symbol} ] on blockchain!`);
+                const response = await apiService.createTransaction(transaction);
+                console.log(response);
+                setSuccessMessage(`Success transaction to hire insurance for [ ${asset.symbol} ] on Blockshield protocol!`);
             } else {
                 console.error(err);
             }
@@ -88,24 +89,29 @@ const AssetPurchaseForm = ({ asset }) => {
             }
 
             <form className="max-w-sm mx-auto" onSubmit={handleBuy}>
-                <h5 className="mb-3 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{asset.name} - {asset.symbol}</h5>
-                <p className="mb-3 text-gray-500 dark:text-gray-400">{asset.description}</p>
-                <p className="mb-3 text-gray-500 dark:text-gray-400">{asset.observation}</p>
+                <div className="mb-5">
+                    <h5 className="mb-3 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{asset.name} - {asset.symbol}</h5>
+                    <p className="mb-3 text-gray-500 dark:text-gray-400">{asset.description}</p>
+                    <p className="mb-3 text-gray-500 dark:text-gray-400">{asset.observation}</p>
+                </div>
                 <br />
                 <div className="mb-5">
                     <label htmlFor="quantity" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantity</label>
                     <input type="number" min={0} max={asset.total_supply - asset.remaining_supply} value={quantity} onChange={(e) => setQuantity(e.target.value)} id="quantity" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
-                </div>
-                <div className="flex items-start mb-5">
-                    <div className="flex items-center h-5">
-                        <input id="insurance" type="checkbox" checked={insuranceInclude} onChange={(e) => setInsuranceInclude(e.target.checked)} value="" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" />
-                    </div>
-                    <label htmlFor="insurance" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree to sign the <a href="#" className="text-blue-600 hover:underline dark:text-blue-500">insurance contract.</a></label>
+                    {/*
+                        <div className="flex items-start mb-5">
+                            <div className="flex items-center h-5">
+                                <input id="insurance" type="checkbox" checked={insuranceInclude} onChange={(e) => setInsuranceInclude(e.target.checked)} value="" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" />
+                            </div>
+                            <label htmlFor="insurance" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree to sign the <a href="#" className="text-blue-600 hover:underline dark:text-blue-500">insurance contract.</a></label>
+                        </div>
+                    */}
                 </div>
                 <br />
-                <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Insure/Buy Asset</button>
-                <br /><br />
-                <button type="button" onClick={goHome} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Go Home</button>
+                <div role="group">
+                    <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Insure/Buy Asset</button>
+                    <button type="button" onClick={goHome} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Go Home</button>
+                </div>
             </form>
         </div>
     );

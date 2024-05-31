@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 const DEFAULT_GAS_PRICE = 20 * 10 ** 9; // 20 Gwei
 
 const blockchainService = {
-    getAmountToPay: async () => {
+    getAmountToPay: async (contractAddress) => {
         // TODO: recuperar o valor a partir do contrato em tempo real
         return 0.01; // 0.01 ETH
     },
@@ -48,7 +48,7 @@ const blockchainService = {
 
             // Create a new contract instance
             const contract = new ethers.Contract(contractAddress, [
-                "function hireInsurance(uint256 quantity_) external payable nonReentrant returns (bool)"
+                "function hireInsurance(uint256 quantity_) external payable nonReentrant"
             ], signer);
 
             // Estimate gas for the transaction
@@ -59,30 +59,29 @@ const blockchainService = {
             const gasPrice = await provider.getGasPrice();
             console.log(`Gas Price: ${gasPrice.toString()}`);
 
+            // Set gas limit plus amount to pay the fee
+            const gasLimit = new BigInt(gasEstimate).plus(ethers.parseUnits("10000", "wei"));
+            console.log(`Gas Limie: ${gasLimit.toString()}`);
+
             // Create transaction object
             const tx = {
                 to: contractAddress,
                 value: ethers.parseEther(amountToSend),
-                gasLimit: gasEstimate.mul(2n), // Safety buffer
+                gasLimit: gasLimit,
                 gasPrice: gasPrice
             };
 
-            // Send the transaction
-            if (insuranceInclude) {
-                try {
-                    const txResponse = await contract.hireInsurance(quantity, tx);
-                    console.log('Transaction Sent:', txResponse);
+            try {
+                const txResponse = await contract.hireInsurance(quantity, tx);
+                console.log('Transaction Sent:', txResponse);
 
-                    // Wait for the transaction to be mined
-                    const receipt = await txResponse.wait();
-                    console.log('Transaction Mined:', receipt);
-                    return receipt;
-                } catch (err) {
-                    console.error("Failed to buy asset", err);
-                    return false;
-                }
-            } else {
-                // TODO: Invoke the contract without insurance hiring
+                // Wait for the transaction to be mined
+                const receipt = await txResponse.wait();
+                console.log('Transaction Mined:', receipt);
+                return receipt;
+            } catch (err) {
+                console.error("Failed to buy asset", err);
+                return false;
             }
         } catch (error) {
             console.error('Error:', error);
