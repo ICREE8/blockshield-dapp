@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
 
+const EXPECTED_CHAIN_ID = 80002;
+
 const WalletConnector = ({ onConnect, onDisconnect }) => {
   const [account, setAccount] = useState(null);
+  let provider;
 
   const connectWallet = async () => {
-    let provider;
-
     if (window.ethereum) {
       try {
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -21,10 +22,43 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
       provider = ethers.getDefaultProvider();
     }
 
+    validateNetwork();
+
     const accounts = await provider.send("eth_requestAccounts", []);
     const account = `${accounts[0].substring(0, 6)}...${accounts[0].substring(36)}`;
     setAccount(account);
     onConnect(provider, accounts[0]);
+  };
+
+  const validateNetwork = async () => {
+    if (window.ethereum.networkVersion !== EXPECTED_CHAIN_ID) {
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `${EXPECTED_CHAIN_ID}` }],
+        });
+      } catch (err) {
+        // This error code indicates that the chain has not been added to MetaMask
+        if (err.code === 4902) {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: `${EXPECTED_CHAIN_ID}`,
+                chainName: 'Polygon Amoy Testnet',
+                rpcUrls: ['https://rpc-amoy.polygon.technology/'],
+                blockExplorerUrls: ['https://www.oklink.com/amoy'],
+                nativeCurrency: {
+                  name: 'MATIC',
+                  symbol: 'MATIC',
+                  decimals: 18
+                }
+              }
+            ]
+          });
+        }
+      }
+    }
   };
 
   const disconnectWallet = () => {
