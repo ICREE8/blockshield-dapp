@@ -19,7 +19,7 @@ const HomePage = () => {
         if (wallet) {
             try {
                 const response = await apiService.getAssets();
-                console.log(response);
+                // console.log(response);
                 setAssets(response.data);
             } catch (err) {
                 console.error("Failed to fetch assets", err);
@@ -31,7 +31,7 @@ const HomePage = () => {
         if (wallet) {
             try {
                 const response = await apiService.getAssetsByWallet(wallet);
-                console.log(response);
+                // console.log(response);
                 setSecuredAssets(response.data);
             } catch (err) {
                 console.error("Failed to fetch secured assets", err);

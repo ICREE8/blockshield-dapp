@@ -3,8 +3,8 @@
 import React from 'react';
 
 const SecuredAssetsTable = ({ data }) => {
-    console.log("On sucured asset table....");
-    console.log(data);
+    // console.log("On sucured asset table....");
+    // console.log(data);
 
     return (
         <div className="relative overflow-x-auto">
