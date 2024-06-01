@@ -1,8 +1,11 @@
 import { ethers } from 'ethers';
 
+import TokenInsurance from './ABI/TokenInsurance.json';
+
 const USDC_CONTRACT_ADDRESS = "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582";
 const USDC_ABI_APPROVE = "function approve(address spender, uint256 value) external returns (bool)";
-const TOKEN_ABI_INSURANCE = "function hireInsurance(uint256 quantity_) external payable";
+const TOKEN_ABI_INSURANCE = TokenInsurance.abi;
+// const TOKEN_ABI_INSURANCE = "function hireInsurance(uint256 quantity_) external payable";
 
 const blockchainService = {
     getAmountToPay: async (contractAddress, quantity, unitaryValue) => {
@@ -62,7 +65,7 @@ const blockchainService = {
             console.log(`Amount to send: ${amountToApprove}`);
 
             // Create contracts instances
-            const contract = new ethers.Contract(contractAddress, [ TOKEN_ABI_INSURANCE ], signer);
+            const contract = new ethers.Contract(contractAddress, TOKEN_ABI_INSURANCE, signer);
             const usdcContract = new ethers.Contract(USDC_CONTRACT_ADDRESS, [ USDC_ABI_APPROVE ], signer);
 
             // Estimate gas for the transaction
