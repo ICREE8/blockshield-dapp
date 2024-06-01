@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 
 const USDC_CONTRACT_ADDRESS = "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582";
 const USDC_ABI_APPROVE = "function approve(address spender, uint256 value) external returns (bool)";
-const TOKEN_ABI_INSURANCE = "function hireInsurance(uint256 quantity_) external payable nonReentrant";
+const TOKEN_ABI_INSURANCE = "function hireInsurance(uint256 quantity_) external payable";
 
 const blockchainService = {
     getAmountToPay: async (contractAddress, quantity, unitaryValue) => {
