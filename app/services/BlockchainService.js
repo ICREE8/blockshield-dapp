@@ -1,11 +1,23 @@
 import { ethers } from 'ethers';
 
-const DEFAULT_GAS_PRICE = 20 * 10 ** 9; // 20 Gwei
+const USDC_CONTRACT_ADDRESS = "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582";
+const USDC_ABI_APPROVE = "function approve(address spender, uint256 value) external returns (bool)";
+const TOKEN_ABI_INSURANCE = "function hireInsurance(uint256 quantity_) external payable";
 
 const blockchainService = {
-    getAmountToPay: async (contractAddress) => {
-        // TODO: recuperar o valor a partir do contrato em tempo real
-        return 0.01; // 0.01 ETH
+    getAmountToPay: async (contractAddress, quantity, unitaryValue) => {
+        // The value to pay will be used in USD, then, converse to the USD dividing per 100000000
+        const ABI = "function getLatestPrice() public view returns (int)";
+        const provider = await blockchainService.getWalletProvider();
+        const signer = await provider.getSigner();
+
+        const contract = new ethers.Contract(contractAddress, [ABI], signer);
+        const lastedPrice = await contract.getLatestPrice();
+        console.log(parseFloat(lastedPrice.toString()));
+        const amountToPay = (parseFloat(lastedPrice.toString()) / 100000000); // TODO: unitaryValue * quantity
+        console.log(`Lasted price: ${lastedPrice},\nQuantity: ${quantity}, \nAmount to pay: ${(amountToPay * quantity * unitaryValue)}`);
+
+        return amountToPay;
     },
 
     getWalletProvider: async () => {
@@ -30,11 +42,12 @@ const blockchainService = {
     },
 
     getWalletAccount: async () => {
-        const accounts = await blockchainService.getWalletProvider().send("eth_requestAccounts", []);
+        const provider = await blockchainService.getWalletProvider();
+        const accounts = await provider.send("eth_requestAccounts", []);
         return accounts[0];
     },
 
-    insure: async (contractAddress, quantity, insuranceInclude) => {
+    insure: async (contractAddress, amountToPay, quantity, insuranceInclude) => {
         try {
             // Request access to the user's MetaMask account
             await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -44,31 +57,43 @@ const blockchainService = {
             const signer = await provider.getSigner();
 
             // Get the amount to send in Ether (ETH)
-            const amountToSend = await blockchainService.getAmountToPay().toString();
+            const amountToSend = amountToPay;
+            const amountToApprove = ethers.parseUnits(amountToSend, 6);
+            console.log(`Amount to send: ${amountToApprove}`);
 
-            // Create a new contract instance
-            const contract = new ethers.Contract(contractAddress, [
-                "function hireInsurance(uint256 quantity_) external payable nonReentrant"
-            ], signer);
+            // Create contracts instances
+            const contract = new ethers.Contract(contractAddress, [ TOKEN_ABI_INSURANCE ], signer);
+            const usdcContract = new ethers.Contract(USDC_CONTRACT_ADDRESS, [ USDC_ABI_APPROVE ], signer);
 
             // Estimate gas for the transaction
-            const gasEstimate = await contract.estimateGas.hireInsurance(quantity, { value: amountToSend });
-            console.log(`Estimated Gas: ${gasEstimate.toString()}`);
+            const gasEstimateApproveUsdc = await usdcContract.approve.estimateGas(contractAddress, amountToApprove);
+            const gasEstimateBnUsdc = ethers.toBigInt(gasEstimateApproveUsdc);
+            console.log(`Estimated USDC Gas: ${gasEstimateBnUsdc}`);
 
-            // Set gas price (optional)
-            const gasPrice = await provider.getGasPrice();
-            console.log(`Gas Price: ${gasPrice.toString()}`);
+            try {
+                const txUsdcResponse = await usdcContract.approve(USDC_CONTRACT_ADDRESS, amountToApprove, { 
+                    gasLimit: gasEstimateBnUsdc + ethers.parseUnits("10000", "wei")
+                });
+                await txUsdcResponse.wait();
+                console.log(txUsdcResponse);
+            } catch (error) {
+                console.error("Failed to approve USDC", err);
+                return false;
+            }
+
+            // Estimate gas for the transaction
+            // const gasEstimate = await contract.hireInsurance.estimateGas(quantity, { value: amountToApprove });
+            const gasEstimate = await contract.hireInsurance.estimateGas(quantity);
+            const gasEstimateBn = ethers.toBigInt(gasEstimate);
+            console.log(`Estimated Gas: ${gasEstimateBn}`);
 
             // Set gas limit plus amount to pay the fee
-            const gasLimit = new BigInt(gasEstimate).plus(ethers.parseUnits("10000", "wei"));
-            console.log(`Gas Limie: ${gasLimit.toString()}`);
+            const gasLimit = gasEstimateBn + (ethers.parseUnits("10000", "wei"));
+            console.log(`Gas Limit: ${gasLimit.toString()}`);
 
             // Create transaction object
             const tx = {
-                to: contractAddress,
-                value: ethers.parseEther(amountToSend),
-                gasLimit: gasLimit,
-                gasPrice: gasPrice
+                gasLimit: gasLimit
             };
 
             try {

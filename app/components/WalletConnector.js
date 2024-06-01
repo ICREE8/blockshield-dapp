@@ -11,6 +11,10 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
   let provider;
 
   const connectWallet = async () => {
+    if (typeof window.ethereum === 'undefined') {
+      alert('Please install a crypto wallet extension to interact with this application!');
+    }
+
     if (window.ethereum) {
       // console.log(ethereum.chainId);
       try {

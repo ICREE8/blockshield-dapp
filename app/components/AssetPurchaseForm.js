@@ -11,8 +11,9 @@ const AssetPurchaseForm = ({ asset }) => {
     const [insuranceInclude, setInsuranceInclude] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccessMessage] = useState('');
+    const [transactionMessage, setTransactionMessage] = useState('');
 
-    console.log(asset);
+    // console.log(asset);
 
     const goHome = async () => {
         router.push('/');
@@ -27,17 +28,29 @@ const AssetPurchaseForm = ({ asset }) => {
         }
 
         try {
+            console.log(`Trying to get lasted price on smart contract ${asset.insurance_token_address}`);
+            const defaultAmountToPay = asset.price.unitary_value * quantity;
+            const amountToPay = await blockchainService.getAmountToPay(
+                asset.insurance_token_address,
+                quantity,
+                asset.price.unitary_value
+            );
+            setTransactionMessage(
+                `Price unit: $${asset.price.unitary_value} | $USD today: ${amountToPay} | Real world value: $${defaultAmountToPay} + network fee!`
+            );
+
             const tx = await blockchainService.insure(
                 asset.insurance_token_address,
-                asset.id,
+                defaultAmountToPay.toString(),
                 quantity,
                 insuranceInclude
             );
+            console.log(tx);
 
             if (tx) {
                 const walletAccount = await blockchainService.getWalletAccount();
                 const transaction = {
-                    "hash": tx.transaction,
+                    "hash": tx.hash,
                     "wallet": walletAccount,
                     "assetTransaction": {
                         "id": asset.id,
@@ -45,10 +58,15 @@ const AssetPurchaseForm = ({ asset }) => {
                         "quantity": quantity
                     }
                 };
+                console.log(transaction);
 
                 const response = await apiService.createTransaction(transaction);
                 console.log(response);
                 setSuccessMessage(`Success transaction to hire insurance for [ ${asset.symbol} ] on Blockshield protocol!`);
+                setError('');
+                setTransactionMessage('');
+                setQuantity(0);
+                setInsuranceInclude(false);
             } else {
                 console.error(err);
             }
@@ -69,7 +87,7 @@ const AssetPurchaseForm = ({ asset }) => {
                         </svg>
                         <span className="sr-only">Info</span>
                         <div>
-                            <span className="font-medium">{error}.</span>
+                            <span className="font-medium">{error}</span>
                         </div>
                     </div>
                 )
@@ -82,12 +100,11 @@ const AssetPurchaseForm = ({ asset }) => {
                         </svg>
                         <span className="sr-only">Info</span>
                         <div>
-                            <span className="font-medium">{success}.</span>
+                            <span className="font-medium">{success}</span>
                         </div>
                     </div>
                 )
             }
-
             <form className="max-w-sm mx-auto" onSubmit={handleBuy}>
                 <div className="mb-5">
                     <h5 className="mb-3 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{asset.name} - {asset.symbol}</h5>
@@ -96,6 +113,19 @@ const AssetPurchaseForm = ({ asset }) => {
                 </div>
                 <br />
                 <div className="mb-5">
+                    {
+                        transactionMessage && (
+                            <div className="flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800" role="alert">
+                                <svg className="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                </svg>
+                                <span className="sr-only">Info</span>
+                                <div>
+                                    <span className="font-medium">{transactionMessage}</span>
+                                </div>
+                            </div>
+                        )
+                    }
                     <label htmlFor="quantity" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantity</label>
                     <input type="number" min={0} max={asset.total_supply - asset.remaining_supply} value={quantity} onChange={(e) => setQuantity(e.target.value)} id="quantity" className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
                     {/*
@@ -110,7 +140,7 @@ const AssetPurchaseForm = ({ asset }) => {
                 <br />
                 <div role="group">
                     <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Insure/Buy Asset</button>
-                    <button type="button" onClick={goHome} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Go Home</button>
+                    <button type="button" onClick={goHome} className="float-right text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Go Home</button>
                 </div>
             </form>
         </div>
