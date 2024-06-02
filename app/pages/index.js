@@ -9,11 +9,21 @@ import Footer from '../components/Footer';
 import Image from "next/image";
 import WalletConnector from '../components/WalletConnector';
 
+const WALLET_STORAGE_KEY = "wallet";
+const PROVIDER_STORAGE_KEY = "provider";
+
 const HomePage = () => {
     const [provider, setProvider] = useState(null);
     const [wallet, setWallet] = useState(null);
     const [assets, setAssets] = useState([]);
     const [securedAssets, setSecuredAssets] = useState([]);
+
+    // const storagedWallet = localStorage.getItem(WALLET_STORAGE_KEY);
+    // const storagedProvider = localStorage.getItem(PROVIDER_STORAGE_KEY);
+    // if (storagedWallet && storagedProvider) {
+    //     setProvider(provider);
+    //     setWallet(wallet);
+    // }
 
     const fetchAssets = useCallback(async () => {
         if (wallet) {
@@ -47,12 +57,16 @@ const HomePage = () => {
     const handleWalletConnect = (provider, wallet) => {
         setProvider(provider);
         setWallet(wallet);
+        // localStorage.setItem(WALLET_STORAGE_KEY, wallet);
+        // localStorage.setItem(PROVIDER_STORAGE_KEY, provider);
     };
 
     const handleWalletDisconnect = () => {
         setProvider(null);
         setWallet(null);
         setSecuredAssets([]);
+        // localStorage.setItem(WALLET_STORAGE_KEY, null);
+        // localStorage.setItem(PROVIDER_STORAGE_KEY, null);
     };
 
     return (
