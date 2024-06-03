@@ -74,7 +74,7 @@ const blockchainService = {
             console.log(`Estimated USDC Gas: ${gasEstimateBnUsdc}`);
 
             try {
-                const txUsdcResponse = await usdcContract.approve(USDC_CONTRACT_ADDRESS, amountToApprove, { 
+                const txUsdcResponse = await usdcContract.approve(contractAddress, amountToApprove, { 
                     gasLimit: gasEstimateBnUsdc + ethers.parseUnits("10000", "wei")
                 });
                 await txUsdcResponse.wait();
@@ -86,6 +86,7 @@ const blockchainService = {
 
             // Estimate gas for the transaction
             // const gasEstimate = await contract.hireInsurance.estimateGas(quantity, { value: amountToApprove });
+            console.log(`Quantity to insure: ${quantity}`);
             const gasEstimate = await contract.hireInsurance.estimateGas(quantity);
             const gasEstimateBn = ethers.toBigInt(gasEstimate);
             console.log(`Estimated Gas: ${gasEstimateBn}`);
